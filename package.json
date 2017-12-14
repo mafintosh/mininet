@@ -1,0 +1,20 @@
+{
+  "name": "mininet",
+  "version": "0.0.0",
+  "description": "Spin up and interact with virtual networks using Mininet and Node.js",
+  "main": "index.js",
+  "dependencies": {
+    "split2": "^2.2.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mafintosh/mininet.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mafintosh/mininet/issues"
+  },
+  "homepage": "https://github.com/mafintosh/mininet"
+}
