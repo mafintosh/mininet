@@ -1,5 +1,8 @@
 # mininet
 
+> Spin up and interact with virtual networks using
+> [Mininet](http://mininet.org/) and Node.js
+
 WIP - nothing to see here
 
 ```
