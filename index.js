@@ -109,7 +109,6 @@ function Node (id, mn) {
 util.inherits(Node, events.EventEmitter)
 
 Node.prototype._onspawn = function (sock) {
-console.log('her')
   var self = this
 
   this._stdio = sock
