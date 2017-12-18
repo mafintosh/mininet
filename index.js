@@ -1,3 +1,4 @@
+var pump = require('pump')
 var proc = require('child_process')
 var net = require('net')
 var split = require('split2')
@@ -20,6 +21,11 @@ function Mininet (opts) {
   var args = opts.args || []
 
   if (topo) args.push('--topo', topo)
+
+  if (opts.sudo) {
+    args.unshift(prog)
+    prog = 'sudo'
+  }
 
   this._mn = proc.spawn(prog, args)
   this._io = net.createServer(this._onstdio.bind(this))
@@ -45,9 +51,12 @@ Mininet.prototype._onstdio = function (socket) {
     var i = Number(header.split(' ')[0].slice(1)) - 1
     var ip = header.split(' ')[1]
     var host = self.hosts[i]
+    var type = header.split(' ')[2]
 
     host.ip = ip
-    host._onspawn(socket)
+
+    if (type === 'stdio') host._onspawn(socket)
+    if (type === 'rpc') host._onrpc(socket)
   })
 }
 
@@ -148,7 +157,7 @@ Host.prototype._onspawn = function (sock) {
 Host.prototype.spawn = function (cmd, onspawn) {
   if (onspawn) this.once('spawn', onspawn)
   if (Array.isArray(cmd)) cmd = cmd.map(stringify).join(' ')
-  cmd = '(echo \'' + this.id + '\' ' + this.id + ' && ' + cmd + ')'
+  cmd = '(echo \'' + this.id + '\' ' + this.id + ' stdio && ' + cmd + ')'
   cmd += ' 2>&1 | nc -U ' + STDIO_SOCK
   this._mn._mn.stdin.write('\n' + this.id + ' ' + cmd + ' &\n')
 }

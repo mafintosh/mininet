@@ -4,6 +4,7 @@
   "description": "Spin up and interact with virtual networks using Mininet and Node.js",
   "main": "index.js",
   "dependencies": {
+    "pump": "^2.0.0",
     "split2": "^2.2.0"
   },
   "devDependencies": {},
