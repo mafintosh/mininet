@@ -3,7 +3,7 @@ var mn = require('../host')
 
 var server = http.createServer(function (req, res) {
   console.log('Server responding')
-  res.end('hello from server\n')
+  res.end('Hello from server!\n')
 })
 
 server.listen(10000, function () {
