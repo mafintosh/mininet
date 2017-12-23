@@ -8,7 +8,12 @@
     "pump": "^2.0.0",
     "split2": "^2.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "standard": "^10.0.3"
+  },
+  "scripts": {
+    "test": "standard"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mafintosh/mininet.git"
