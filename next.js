@@ -3,8 +3,10 @@ var pump = require('pump')
 var proc = require('child_process')
 var util = require('util')
 var fs = require('fs')
+var path = require('path')
 var net = require('net')
 var events = require('events')
+var os = require('os')
 
 function Mininet (opts) {
   if (!(this instanceof Mininet)) return new Mininet(opts)
@@ -20,9 +22,10 @@ function Mininet (opts) {
 
   this._queue = []
   this._python = null
-  this._sock = 'mn.sock'
+  this._sock = path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
   this._server = null
   this._args = ['python', '-i']
+  if (opts.clean) this._args.unshift(path.join(__dirname, 'clean.sh'))
   if (process.getuid() && opts.sudo !== false) {
     this._args.unshift('sudo')
   }
@@ -75,7 +78,6 @@ Mininet.prototype._exec = function (cmd) {
     this._python = proc.spawn(this._args[0], this._args.slice(1))
     this._python.on('exit', this._onexit.bind(this))
     this._python.stderr.resume()
-//    this._python.stderr.pipe(process.stderr)
     this._python.stdout.pipe(split()).on('data', this._parse.bind(this))
     this._python.stdin.write(trim(`
       try:
@@ -122,6 +124,7 @@ Mininet.prototype.stop = function (cb) {
   this.stopped = true
   this._python.stdin.write('net.stop()\n')
   this._python.stdin.end(cb)
+  fs.unlink(this._sock, noop)
 }
 
 Mininet.prototype.start = function (cb) {
@@ -284,6 +287,7 @@ Switch.prototype.link = function (to, opts) {
   if (!opts) opts = {}
 
   var line = ''
+  if (opts.bandwidth) opts.bw = opts.bandwidth
   if (opts.bw !== undefined) line += ', bw=' + opts.bw
   if (opts.delay !== undefined) line += ', delay=' + JSON.stringify(opts.delay)
   if (opts.loss !== undefined) line += ', loss=' + opts.loss
@@ -387,7 +391,7 @@ var s1 = mn.createSwitch()
 var s2 = mn.createSwitch()
 
 h1.link(s1)
-s1.link(s2, {delay: '1s'})
+s1.link(s2, {delay: '100ms', loss: 25})
 h2.link(s2)
 
 mn.start(function () {
@@ -405,6 +409,6 @@ mn.start(function () {
       mn.stop()
     })
     proc.kill()
-  }, 1000)
+  }, 10000)
 })
 
