@@ -75,7 +75,7 @@ Mininet.prototype._exec = function (cmd) {
     this._python = proc.spawn(this._args[0], this._args.slice(1))
     this._python.on('exit', this._onexit.bind(this))
     this._python.stderr.resume()
-    this._python.stderr.pipe(process.stderr)
+//    this._python.stderr.pipe(process.stderr)
     this._python.stdout.pipe(split()).on('data', this._parse.bind(this))
     this._python.stdin.write(trim(`
       try:
@@ -89,16 +89,22 @@ Mininet.prototype._exec = function (cmd) {
         exit(10)
 
       def print_host(h):
-        print "ack", json.dumps({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
+        try:
+          print "ack", json.dumps({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
+        except:
+          print "err", "host info failed"
 
       def net_start():
-        net.start()
-        result = []
-        for h in net.hosts:
-          result.append({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
-        print "ack", json.dumps(result)
+        try:
+          net.start()
+          result = []
+          for h in net.hosts:
+            result.append({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
+          print "ack", json.dumps(result)
+        except:
+          print "err", "start failed"
 
-      net = Mininet(link=TCLink, controller=findController(), switch=OVSBridge)
+      net = Mininet(link=TCLink, switch=OVSBridge, controller=findController())
     `))
   }
 
@@ -152,6 +158,7 @@ Mininet.prototype.start = function (cb) {
       host.emit('network')
     }
 
+    self.emit('start')
     cb(null)
   }
 }
@@ -183,6 +190,14 @@ Mininet.prototype._parse = function (line) {
     this._queue.shift()(null, JSON.parse(data))
     return
   }
+  if (type === 'err') {
+    this._queue.shift()(new Error(JSON.parse(data)))
+    return
+  }
+  if (type === 'critical') {
+    this.emit('error', new Error(JSON.parse(data)))
+    return
+  }
 }
 
 function Controller (index, mn) {
@@ -199,16 +214,11 @@ function Switch (index, mn) {
   this.id = 's' + (index + 1)
   this._mn = mn
   this._mn._exec(`
-    ${this.id} = net.addSwitch("${this.id}")
+    try:
+      ${this.id} = net.addSwitch("${this.id}")
+    except:
+      print "critical", "add switch failed"
   `)
-}
-
-Switch.prototype.link = function (to) {
-  this._mn._exec(`
-    net.addLink(${this.id}, ${to.id}, delay='1s')
-  `)
-
-  return to
 }
 
 function Host (index, mn) {
@@ -221,7 +231,10 @@ function Host (index, mn) {
   this._ids = 0
   this._mn = mn
   this._mn._exec(`
-    ${this.id} = net.addHost("${this.id}")
+    try:
+      ${this.id} = net.addHost("${this.id}")
+    except:
+      print "critical", "add host failed"
   `)
 }
 
@@ -266,9 +279,21 @@ Host.prototype.update = function (cb) {
   }
 }
 
-Host.prototype.link = function (to) {
+Host.prototype.link =
+Switch.prototype.link = function (to, opts) {
+  if (!opts) opts = {}
+
+  var line = ''
+  if (opts.bw !== undefined) line += ', bw=' + opts.bw
+  if (opts.delay !== undefined) line += ', delay=' + JSON.stringify(opts.delay)
+  if (opts.loss !== undefined) line += ', loss=' + opts.loss
+  if (opts.htb || opts.useHtb) line += ', use_htb=True'
+
   this._mn._exec(`
-    net.addLink(${this.id}, ${to.id})
+    try:
+      net.addLink(${this.id}, ${to.id} ${line})
+    except:
+      print "critical", "add link failed"
   `)
 
   return to
@@ -362,13 +387,13 @@ var s1 = mn.createSwitch()
 var s2 = mn.createSwitch()
 
 h1.link(s1)
-s1.link(s2)
+s1.link(s2, {delay: '1s'})
 h2.link(s2)
 
 mn.start(function () {
   var proc = h1.spawn('node server.js', {stdio: 'inherit'})
   // h1.spawn('ping ' + h1.ip, {stdio: 'inherit'})
-  // h1.spawn('ping ' + h2.ip, {stdio: 'inherit'})
+  h1.spawn('ping ' + h2.ip, {stdio: 'inherit'})
 
   proc.once('stdout', function () {
     h2.exec(`curl ${h1.ip}:10000`, console.log)
