@@ -26,6 +26,7 @@ function Mininet (opts) {
   this._sock = opts.sock || path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
   this._server = null
   this._args = ['python', '-i']
+  this._debug = !!opts.debug
   if (opts.clean) this._args.unshift(path.join(__dirname, 'clean.sh'))
   if (process.getuid() && opts.sudo !== false) {
     this._args.unshift('sudo')
@@ -79,6 +80,7 @@ Mininet.prototype._exec = function (cmd) {
     this._python = proc.spawn(this._args[0], this._args.slice(1))
     this._python.on('exit', this._onexit.bind(this))
     this._python.stderr.resume()
+    if (this._debug) this._python.stderr.pipe(process.stderr)
     this._python.stdout.pipe(split()).on('data', this._parse.bind(this))
     this._python.stdin.write(trim(`
       try:

@@ -72,9 +72,10 @@ Create a new mininet instance. Options include
 
 ``` js
 {
-  clean: false,        // if true run mn -c first
-  sudo: true,          // use sudo if needed 
-  sock: '/tmp/mn.sock' // explictly set the .sock file used
+  clean: false,         // if true run mn -c first
+  sudo: true,           // use sudo if needed 
+  sock: '/tmp/mn.sock', // explictly set the .sock file used
+  debug: false          // set to true to enable debug output
 }
 ```
 
