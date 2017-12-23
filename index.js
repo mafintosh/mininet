@@ -23,7 +23,7 @@ function Mininet (opts) {
 
   this._queue = []
   this._python = null
-  this._sock = path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
+  this._sock = opts.sock || path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
   this._server = null
   this._args = ['python', '-i']
   if (opts.clean) this._args.unshift(path.join(__dirname, 'clean.sh'))

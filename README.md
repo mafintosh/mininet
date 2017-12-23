@@ -25,22 +25,26 @@ var h2 = mn.createHost()
 h1.link(s1)
 h2.link(s1)
 
-// run a server in node
-h1.spawn('node server.js')
+// start the network
+mn.start()
 
-h1.on('message:listening', function () {
+// run a server in node
+var proc = h1.spawn('node server.js')
+
+proc.on('message:listening', function () {
   // when h1 signals it is listening, run curl
-  h2.spawn('curl --silent ' + h1.ip + ':10000')
+  var proc2 = h2.spawn('curl --silent ' + h1.ip + ':10000')
+
+  proc2.on('stdout', function (data) {
+    process.stdout.write('h2 ' + data)
+    mn.stop() // stop when h2 messages
+  })
 })
 
-h1.on('stdout', function (data) {
+proc.on('stdout', function (data) {
   process.stdout.write('h1 ' + data)
 })
 
-h2.on('stdout', function (data) {
-  process.stdout.write('h2 ' + data)
-  mn.destroy() // stop when h2 messages
-})
 ```
 
 Assuming server.js looks like this
@@ -59,6 +63,142 @@ server.listen(10000, function () {
   mn.send('listening') // msg the host
 })
 ```
+
+## API
+
+#### `var mn = mininet([options])`
+
+Create a new mininet instance. Options include
+
+``` js
+{
+  clean: false,        // if true run mn -c first
+  sudo: true,          // use sudo if needed 
+  sock: '/tmp/mn.sock' // explictly set the .sock file used
+}
+```
+
+If for some reason your mininet instance stops working
+you probably wanna try using `clean: true`.
+
+#### `mn.start([callback])`
+
+Start the mininet network. Usually you call this
+after defining your hosts, switches and links.
+
+After the network has fully started `start` is emitted.
+
+#### `mn.stop([callback])`
+
+Stop the mininet network. You should not call
+any other methods after this.
+
+After the network has fully stopped `stop` is emitted.
+
+#### `mn.switches`
+
+Array of all created switches.
+
+#### `mn.hosts`
+
+Array of all created hosts.
+
+#### `var sw = mn.createSwitch()`
+
+Create a new switch
+
+#### `sw.link(other, [options])`
+
+Link the switch with another switch or host.
+Options include:
+
+``` js
+{
+  bandwidth: 10,  // use 10mbit link
+  delay: '100ms', // 100ms delay
+  loss: 10,       // 10% package loss
+  htb: true       // use htb
+}
+```
+
+#### `var host = mn.createHost()`
+
+Create an new host
+
+#### `host.ip`
+
+The IP address of the host. Populated after the network is started.
+
+#### `host.mac`
+
+The MAC address of the host. Populated after the network is started.
+
+#### `host.link(other, [options])
+
+Link the host with another host or switch.
+Takes the same options as `sw.link`.
+
+#### `host.exec(cmd, [callback])`
+
+Execute a command and buffer the output and return it in the callback.
+
+#### `var proc = host.spawn(cmd, [options])`
+
+Spawn a new process to run the in background of the host.
+Options include:
+
+``` js
+{
+  stdio: 'inherit' // set this to forward stdio
+}
+```
+
+#### `proc.kill([signal])`
+
+Kill the process.
+
+#### `proc.send(type, data)`
+
+Send a message to the process.
+
+#### `proc.on('stdout', data)`
+
+Emitted when the process has output.
+
+#### `proc.on('message', type, data)`
+
+Emitted when the process received a message.
+
+#### `proc.on('message:{type}`, data)`
+
+Same as above but with the type as part of the event name
+for convenience.
+
+#### `proc.on('exit')`
+
+Emitted when the process exits.
+
+## Messaging
+
+If you are spawning a node process you can require `mininet/host`
+to communicate with the host.
+
+#### `var host = require('mininet/host')`
+
+Require this in a spawned process.
+
+#### `host.send(type, data)`
+
+Send a message to the host.
+
+#### `host.on('message', type, data)`
+
+Emitted when a message is received from the host.
+
+#### `host.on('message:{type}`, data)`
+
+Same as above but with the type as part of the event name
+for convenience.
 
 ## License
 
