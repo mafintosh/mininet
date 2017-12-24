@@ -97,7 +97,7 @@ Mininet.prototype._exec = function (cmd) {
         try:
           print "ack", json.dumps({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
         except:
-          print "err", "host info failed"
+          print "err", json.dumps("host info failed")
 
       def net_start():
         try:
@@ -107,7 +107,7 @@ Mininet.prototype._exec = function (cmd) {
             result.append({'name': h.name, 'ip': h.IP(), 'mac': h.MAC()})
           print "ack", json.dumps(result)
         except:
-          print "err", "start failed"
+          print "err", json.dumps("start failed")
 
       net = Mininet(link=TCLink, switch=OVSBridge, controller=findController())
     `))
@@ -224,7 +224,7 @@ function Switch (index, mn) {
     try:
       ${this.id} = net.addSwitch("${this.id}")
     except:
-      print "critical", "add switch failed"
+      print "critical", json.dumps("add switch failed")
   `)
 }
 
@@ -241,7 +241,7 @@ function Host (index, mn) {
     try:
       ${this.id} = net.addHost("${this.id}")
     except:
-      print "critical", "add host failed"
+      print "critical", json.dumps("add host failed")
   `)
 }
 
@@ -326,7 +326,7 @@ Switch.prototype.link = function (to, opts) {
     try:
       net.addLink(${this.id}, ${to.id} ${line})
     except:
-      print "critical", "add link failed"
+      print "critical", json.dumps("add link failed")
   `)
 
   return to
