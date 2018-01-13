@@ -29,7 +29,7 @@ function Mininet (opts) {
   this._debug = !!opts.debug
   if (opts.clean) this._args.unshift(path.join(__dirname, 'clean.sh'))
   if (process.getuid() && opts.sudo !== false) {
-    this._args.unshift('sudo')
+    this._args.unshift('sudo', '-E')
   }
 
   this._listen()
