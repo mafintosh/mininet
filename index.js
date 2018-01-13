@@ -339,7 +339,7 @@ Switch.prototype.link = function (to, opts) {
 
 Host.prototype.spawn = function (cmd, opts) {
   if (!opts) opts = {}
-  if (!Array.isArray(cmd)) cmd = [cmd]
+  if (!Array.isArray(cmd)) cmd = ['/bin/bash', '-c', cmd]
   if (opts.prefixStdio === undefined) opts.prefixStdio = this._mn._prefixStdio
   if (opts.stdio === undefined) opts.stdio = this._mn._stdio
 
