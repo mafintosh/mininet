@@ -398,6 +398,14 @@ Host.prototype.spawn = function (cmd, opts) {
   }
 }
 
+Host.prototype.spawnNode = function (prog, opts) {
+  return this.spawn([
+    process.execPath,
+    '-e',
+    'require("vm").runInThisContext(' + JSON.stringify(prog) + ', {filename: "[eval]"})'
+  ], opts)
+}
+
 Host.prototype._onclose = function (proc, err) {
   var i = this.processes.indexOf(proc)
   if (i > -1) this.processes.splice(i, 1)

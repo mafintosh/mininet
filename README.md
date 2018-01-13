@@ -160,6 +160,20 @@ Options include:
 If you set `prefixStdio: true` it will be converted to `{host.id}.{process.id}`.
 When debugging it can be useful to set both `{stdio: 'inherit', prefixStdio: true}`.
 
+#### `var proc = host.spawnNode(programSource, [options])`
+
+Helper that spawns a Node.js source inside the host. Useful when using multiline strings
+
+``` js
+host.spawnNode(`
+  console.log('starting timer...')
+  setInterval(() => console.log('Time is', Date.now()))
+`, {
+  stdio: 'inherit',
+  prefixStdio: true
+})
+```
+
 #### `proc.kill([signal])`
 
 Kill the process.
