@@ -136,7 +136,7 @@ The IP address of the host. Populated after the network is started.
 
 The MAC address of the host. Populated after the network is started.
 
-#### `host.link(other, [options])
+#### `host.link(other, [options])`
 
 Link the host with another host or switch.
 Takes the same options as `sw.link`.
