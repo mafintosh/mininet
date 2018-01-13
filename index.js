@@ -337,6 +337,9 @@ Switch.prototype.link = function (to, opts) {
 
 Host.prototype.spawn = function (cmd, opts) {
   if (!opts) opts = {}
+  if (!Array.isArray(cmd)) cmd = [cmd]
+
+  cmd = cmd.map(c => JSON.stringify(c)).join(' ')
 
   var proc = new events.EventEmitter()
   var self = this
