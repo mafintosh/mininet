@@ -24,6 +24,8 @@ function Mininet (opts) {
   this._queue = []
   this._python = null
   this._sock = opts.sock || path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
+  this._stdio = opts.stdio
+  this._prefixStdio = opts.prefixStdio
   this._server = null
   this._args = ['python', '-i']
   this._debug = !!opts.debug
@@ -338,6 +340,8 @@ Switch.prototype.link = function (to, opts) {
 Host.prototype.spawn = function (cmd, opts) {
   if (!opts) opts = {}
   if (!Array.isArray(cmd)) cmd = [cmd]
+  if (opts.prefixStdio === undefined) opts.prefixStdio = this._mn._prefixStdio
+  if (opts.stdio === undefined) opts.stdio = this._mn._stdio
 
   cmd = cmd.map(c => JSON.stringify(c)).join(' ')
 

@@ -75,7 +75,9 @@ Create a new mininet instance. Options include
   clean: false,         // if true run mn -c first
   sudo: true,           // use sudo if needed 
   sock: '/tmp/mn.sock', // explictly set the .sock file used
-  debug: false          // set to true to enable debug output
+  debug: false,         // set to true to enable debug output
+  stdio: null,          // passed to host.spawn as a default option
+  prefixStdio: false    // passed to host.spawn as a default option
 }
 ```
 
