@@ -282,9 +282,12 @@ Host.prototype._onstdio = function (id, socket) {
 
   proc.stdio = socket
 
-  socket.on('data', function (data) {
-    proc.emit('stdout', data)
-  })
+  if (proc.prefixStdio) {
+    var p = proc.prefixStdio + ' '
+    socket.pipe(split()).on('data', (data) => proc.emit('stdout', Buffer.from(p + data + os.EOL)))
+  } else {
+    socket.on('data', (data) => proc.emit('stdout', data))
+  }
 
   socket.on('close', function () {
     self._onclose(proc, null)
@@ -347,6 +350,8 @@ Host.prototype.spawn = function (cmd, opts) {
   proc.kill = kill
   proc.send = send
   proc.killed = false
+  proc.prefixStdio = opts.prefixStdio || null
+  if (proc.prefixStdio === true) proc.prefixStdio = `[${this.id}.${proc.id}]`
 
   this.processes.push(proc)
   this.exec(fork(this.index, proc.id, cmd, this._mn._sock), onspawn)

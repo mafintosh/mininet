@@ -150,9 +150,13 @@ Options include:
 
 ``` js
 {
-  stdio: 'inherit' // set this to forward stdio
+  stdio: 'inherit', // set this to forward stdio
+  prefixStdio: 'some-prefix' // all stdio is prefixed with this
 }
 ```
+
+If you set `prefixStdio: true` it will be converted to `{host.id}.{process.id}`.
+When debugging it can be useful to set both `{stdio: 'inherit', prefixStdio: true}`.
 
 #### `proc.kill([signal])`
 
