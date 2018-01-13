@@ -216,7 +216,7 @@ Send a message to the host.
 
 Emitted when a message is received from the host.
 
-#### `host.on('message:{type}`, data)`
+#### `host.on('message:{type}', data)`
 
 Same as above but with the type as part of the event name
 for convenience.
