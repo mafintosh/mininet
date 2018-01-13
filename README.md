@@ -190,7 +190,7 @@ Emitted when the process has output.
 
 Emitted when the process received a message.
 
-#### `proc.on('message:{type}`, data)`
+#### `proc.on('message:{type}', data)`
 
 Same as above but with the type as part of the event name
 for convenience.
