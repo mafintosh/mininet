@@ -11,12 +11,22 @@ sock.pipe(split()).on('data', function (data) {
   } catch (err) {
     return
   }
-  exports.emit('message', data.name, data.data)
-  exports.emit('message:' + data.name, data.data)
+  var opts = {from: data.from}
+  exports.emit('message', data.name, data.data, opts)
+  exports.emit('message:' + data.name, data.data, opts)
 })
 
 exports = module.exports = new events.EventEmitter()
 
-exports.send = function (name, data) {
-  sock.write(JSON.stringify({name: name, data: data}) + '\n')
+exports.send = function (name, data, opts) {
+  if (!opts) opts = {}
+  sock.write(JSON.stringify({name: name, data: data, to: opts.to}) + '\n')
+}
+
+exports.sendTo = function (host, name, data) {
+  exports.send(name, data, {to: host})
+}
+
+exports.broadcast = function (name, data) {
+  exports.send(name, data, {to: '*'})
 }

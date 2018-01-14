@@ -258,11 +258,17 @@ Host.prototype._process = function (id) {
 }
 
 Host.prototype._onrpc = function (id, socket) {
+  var self = this
   var proc = this._process(id)
   if (!proc) return
 
+  var from = this.id + '.' + proc.id
+
   proc.rpc = socket
-  while (proc.pending.length) proc.send(proc.pending.shift())
+  while (proc.pending.length) {
+    var next = proc.pending.shift()
+    proc._send(next.name, next.data, next.from)
+  }
 
   socket.pipe(split()).on('data', function (data) {
     try {
@@ -271,9 +277,35 @@ Host.prototype._onrpc = function (id, socket) {
       socket.destroy()
       return
     }
+    if (data.to === '*') return broadcast(data)
+    if (data.to) return forward(data, data.to)
+
     proc.emit('message', data.name, data.data)
     proc.emit('message:' + data.name, data.data)
   })
+
+  proc.emit('rpc')
+
+  function broadcast (data) {
+    for (var i = 0; i < self._mn.hosts.length; i++) {
+      var h = self._mn.hosts[i]
+      for (var j = 0; j < h.processes.length; j++) {
+        h.processes[j]._send(data.name, data.data, from)
+      }
+    }
+  }
+
+  function forward (data, to) {
+    var parts = to.slice(1).split('.')
+    var index = parseInt(parts[0], 10) - 1
+    var proc = parts.length < 2 ? -1 : parseInt(parts[1], 10)
+    var host = self._mn.hosts[index]
+    if (!host) return
+    for (var i = 0; i < host.processes.length; i++) {
+      var p = host.processes[i]
+      if (p.id === proc || proc === -1) p._send(data.name, data.data, from)
+    }
+  }
 }
 
 Host.prototype._onstdio = function (id, socket) {
@@ -355,7 +387,8 @@ Host.prototype.spawn = function (cmd, opts) {
   proc.id = this._ids++
   proc.pid = 0
   proc.kill = kill
-  proc.send = send
+  proc.send = sendFromHost
+  proc._send = send
   proc.killed = false
   proc.prefixStdio = opts.prefixStdio || null
   if (proc.prefixStdio === true) proc.prefixStdio = `[${this.id}.${proc.id}]`
@@ -369,12 +402,16 @@ Host.prototype.spawn = function (cmd, opts) {
 
   return proc
 
-  function send (name, data) {
+  function sendFromHost (name, data) {
+    send(name, data, 'host')
+  }
+
+  function send (name, data, from) {
     if (!proc.rpc) {
-      proc.pending.push({name: name, data: data})
+      proc.pending.push({name: name, data: data, from: from})
       return
     }
-    proc.rpc.write(JSON.stringify({name: name, data: data}) + '\n')
+    proc.rpc.write(JSON.stringify({name: name, data: data, from: from}) + '\n')
   }
 
   function kill (sig) {
