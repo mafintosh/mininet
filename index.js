@@ -252,7 +252,7 @@ util.inherits(Host, events.EventEmitter)
 Host.prototype._process = function (id) {
   for (var i = 0; i < this.processes.length; i++) {
     var proc = this.processes[i]
-    if (proc.id === id) return proc
+    if (proc._id === id) return proc
   }
   return null
 }
@@ -261,8 +261,6 @@ Host.prototype._onrpc = function (id, socket) {
   var self = this
   var proc = this._process(id)
   if (!proc) return
-
-  var from = this.id + '.' + proc.id
 
   proc.rpc = socket
   while (proc.pending.length) {
@@ -290,7 +288,7 @@ Host.prototype._onrpc = function (id, socket) {
     for (var i = 0; i < self._mn.hosts.length; i++) {
       var h = self._mn.hosts[i]
       for (var j = 0; j < h.processes.length; j++) {
-        h.processes[j]._send(data.name, data.data, from)
+        h.processes[j]._send(data.name, data.data, proc.id)
       }
     }
   }
@@ -298,12 +296,12 @@ Host.prototype._onrpc = function (id, socket) {
   function forward (data, to) {
     var parts = to.slice(1).split('.')
     var index = parseInt(parts[0], 10) - 1
-    var proc = parts.length < 2 ? -1 : parseInt(parts[1], 10)
+    var id = parts.length < 2 ? -1 : parseInt(parts[1], 10)
     var host = self._mn.hosts[index]
     if (!host) return
     for (var i = 0; i < host.processes.length; i++) {
       var p = host.processes[i]
-      if (p.id === proc || proc === -1) p._send(data.name, data.data, from)
+      if (p._id === id || id === -1) p._send(data.name, data.data, proc.id)
     }
   }
 }
@@ -384,17 +382,18 @@ Host.prototype.spawn = function (cmd, opts) {
   proc.stdio = null
   proc.rpc = null
   proc.pending = []
-  proc.id = this._ids++
+  proc._id = this._ids++
+  proc.id = this.id + '.' + proc._id
   proc.pid = 0
   proc.kill = kill
   proc.send = sendFromHost
   proc._send = send
   proc.killed = false
   proc.prefixStdio = opts.prefixStdio || null
-  if (proc.prefixStdio === true) proc.prefixStdio = `[${this.id}.${proc.id}]`
+  if (proc.prefixStdio === true) proc.prefixStdio = `[proc.id]`
 
   this.processes.push(proc)
-  this.exec(fork(this.index, proc.id, cmd, this._mn._sock), onspawn)
+  this.exec(fork(this.index, proc._id, cmd, this._mn._sock), onspawn)
 
   if (opts.stdio === 'inherit') {
     proc.on('stdout', data => process.stdout.write(data))
