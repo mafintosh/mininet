@@ -174,6 +174,10 @@ host.spawnNode(`
 })
 ```
 
+#### `proc.id`
+
+Unique string id of the process
+
 #### `proc.kill([signal])`
 
 Kill the process.
@@ -212,11 +216,26 @@ Require this in a spawned process.
 
 Send a message to the host.
 
-#### `host.on('message', type, data)`
+#### `host.sendTo(processId, type, data)`
+
+Send a message to another process.
+
+#### `host.broadcast(type, data)`
+
+Send a message to all processes.
+
+#### `host.on('message', type, data, metadata)`
 
 Emitted when a message is received from the host.
+The metadata argument contains the following data
 
-#### `host.on('message:{type}', data)`
+``` js
+{
+  from: 'some-process-id-or-host' // who sent this message
+}
+```
+
+#### `host.on('message:{type}', data, metadata)`
 
 Same as above but with the type as part of the event name
 for convenience.
