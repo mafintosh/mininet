@@ -18,6 +18,14 @@ sock.pipe(split()).on('data', function (data) {
 
 exports = module.exports = new events.EventEmitter()
 
+exports.unref = function () {
+  sock.unref()
+}
+
+exports.ref = function () {
+  sock.ref()
+}
+
 exports.send = function (name, data, opts) {
   if (!opts) opts = {}
   sock.write(JSON.stringify({name: name, data: data, to: opts.to}) + '\n')
