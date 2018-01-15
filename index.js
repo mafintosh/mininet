@@ -390,7 +390,7 @@ Host.prototype.spawn = function (cmd, opts) {
   proc._send = send
   proc.killed = false
   proc.prefixStdio = opts.prefixStdio || null
-  if (proc.prefixStdio === true) proc.prefixStdio = `[proc.id]`
+  if (proc.prefixStdio === true) proc.prefixStdio = `[${proc.id}]`
 
   this.processes.push(proc)
   this.exec(fork(this.index, proc._id, cmd, this._mn._sock), onspawn)
