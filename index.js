@@ -438,7 +438,7 @@ Host.prototype.spawnNode = function (prog, opts) {
   return this.spawn([
     process.execPath,
     '-e',
-    'require("vm").runInThisContext(' + JSON.stringify(prog) + ', {filename: "[eval]"})'
+    'require("vm").runInThisContext(Buffer.from("' + Buffer.from(prog).toString('hex') + '", "hex").toString(), {filename: "[eval]"})'
   ], opts)
 }
 
