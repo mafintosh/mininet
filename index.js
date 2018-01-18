@@ -21,6 +21,7 @@ function Mininet (opts) {
   this.started = false
   this.stopped = false
 
+  this._defer = opts.defer ? [] : null
   this._queue = []
   this._python = null
   this._sock = opts.sock || path.join(os.tmpdir(), 'mn.' + Math.random() + 'sock')
@@ -78,6 +79,11 @@ Mininet.prototype._onexit = function (code) {
 }
 
 Mininet.prototype._exec = function (cmd) {
+  if (this._defer) this._defer.push(cmd)
+  else this._execNow(cmd)
+}
+
+Mininet.prototype._execNow = function (cmd) {
   if (!this._python) {
     this._python = proc.spawn(this._args[0], this._args.slice(1))
     this._python.on('exit', this._onexit.bind(this))
@@ -121,7 +127,7 @@ Mininet.prototype._exec = function (cmd) {
 Mininet.prototype.stop = function (cb) {
   if (!cb) cb = noop
 
-  if (this.stopped) {
+  if (this.stopped || !this.started) {
     process.nextTick(cb)
     return
   }
@@ -149,6 +155,12 @@ Mininet.prototype.start = function (cb) {
   var self = this
 
   this.started = true
+
+  if (this._defer) {
+    for (var i = 0; i < this._defer.length; i++) this._execNow(this._defer[i])
+    this._defer = null
+  }
+
   this._queue.push(onstart)
   this._exec(`
     net_start()
