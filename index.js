@@ -457,6 +457,7 @@ Host.prototype.spawnNode = function (prog, opts) {
 Host.prototype._onclose = function (proc, err) {
   var i = this.processes.indexOf(proc)
   if (i > -1) this.processes.splice(i, 1)
+  proc.killed = true
   if (err) proc.emit('error', err)
   proc.emit('close')
   proc.emit('exit')
