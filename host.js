@@ -4,10 +4,19 @@ var events = require('events')
 
 var sock = net.connect(process.env.MN_SOCK)
 
+function parseJsonBuffer (k, v) {
+  const isBuffer = v !== null &&
+    typeof v === 'object' &&
+    v.type === 'Buffer' &&
+    Array.isArray(v.data)
+  if (isBuffer) return Buffer.from(v.data)
+  return v
+}
+
 sock.write(process.env.MN_HEADER + '\n')
 sock.pipe(split()).on('data', function (data) {
   try {
-    data = JSON.parse(data)
+    data = JSON.parse(data, parseJsonBuffer)
   } catch (err) {
     return
   }
