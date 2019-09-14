@@ -6,6 +6,9 @@ var path = require('path')
 var net = require('net')
 var events = require('events')
 var os = require('os')
+var ext = require('./ext')
+var parseExtendedTypes = ext.parseExtendedTypes
+var serializeError = ext.serializeError
 
 module.exports = Mininet
 
@@ -282,7 +285,7 @@ Host.prototype._onrpc = function (id, socket) {
 
   socket.pipe(split()).on('data', function (data) {
     try {
-      data = JSON.parse(data)
+      data = JSON.parse(data, parseExtendedTypes)
     } catch (err) {
       socket.destroy()
       return
@@ -419,10 +422,11 @@ Host.prototype.spawn = function (cmd, opts) {
 
   function send (name, data, from) {
     if (!proc.rpc) {
-      proc.pending.push({name: name, data: data, from: from})
+      proc.pending.push({ name: name, data: data, from: from })
       return
     }
-    proc.rpc.write(JSON.stringify({name: name, data: data, from: from}) + '\n')
+
+    proc.rpc.write(JSON.stringify({ name: name, data: data, from: from }, serializeError) + '\n')
   }
 
   function kill (sig) {
