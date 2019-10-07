@@ -1,6 +1,6 @@
 {
   "name": "mininet",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "description": "Spin up and interact with virtual networks using Mininet and Node.js",
   "main": "index.js",
   "dependencies": {
